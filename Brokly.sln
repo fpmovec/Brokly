@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brokly", "Brokly\Brokly.csproj", "{7BE126D8-6294-4E4E-9745-B3283B2B530B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brokly.Contracts", "Brokly.Contracts\Brokly.Contracts.csproj", "{5ED25EA2-47EF-4C54-B495-05B2BABE7C71}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BE126D8-6294-4E4E-9745-B3283B2B530B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BE126D8-6294-4E4E-9745-B3283B2B530B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BE126D8-6294-4E4E-9745-B3283B2B530B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BE126D8-6294-4E4E-9745-B3283B2B530B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5ED25EA2-47EF-4C54-B495-05B2BABE7C71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5ED25EA2-47EF-4C54-B495-05B2BABE7C71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5ED25EA2-47EF-4C54-B495-05B2BABE7C71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5ED25EA2-47EF-4C54-B495-05B2BABE7C71}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
