@@ -1,9 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <PackageVersion>1.0.1</PackageVersion>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Title>Brokly.Contracts</Title>
+        <Authors>Max Kryvets</Authors>
+        <PackageIcon>brokly.png</PackageIcon>
+        <RepositoryUrl>https://github.com/fpmovec/Brokly</RepositoryUrl>
+        <Description>Elevate your application messaging with Brokly - a streamlined implementation of the mediator pattern that brings structure to your CQRS flows while maintaining the flexibility you need</Description>
+        <Copyright>©2025, fpmovec</Copyright>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IncludeSymbols>true</IncludeSymbols>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="brokly.png" Pack="true" PackagePath="\" />
+        <None Include="..\LICENSE" Pack="true" PackagePath="\" />
+        <None Include="bin\Release\*.xml" Pack="true" PackagePath="lib\$(TargetFramework)" />
+    </ItemGroup>
 
 </Project>
