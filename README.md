@@ -140,6 +140,11 @@ Configure `BroklyOptions` in the `AddBrokly` lambda:
 
 See the full `BroklyOptions` API in the [Domain project](https://github.com/fpmovec/Brokly/tree/main/Brokly/Domain).
 
+## In the plans:
+- Behaviour pipeline
+- Built-in requests validation
+- Create more than one queue dynamically to segregate events those need to be handled
+
 ## Contributing
 
 1. Fork the repository  
