@@ -14,6 +14,7 @@ public class BroklyOptions
     /// The maximum number of events those can be placed in the queue at the same time
     /// </summary>
     public int MaxQueueSize { get; private set; } = 500;
+    public bool UsePipelines { get; private set; }
     
     /// <summary>
     /// Number thar shows how many 'consumers' handle events
@@ -95,6 +96,13 @@ public class BroklyOptions
     {
         ConsumersCount = count;
         
+        return this;
+    }
+
+    public BroklyOptions UseRequestPipelines(bool useRequestPipelines = true)
+    {
+        UsePipelines = useRequestPipelines;
+
         return this;
     }
 }
