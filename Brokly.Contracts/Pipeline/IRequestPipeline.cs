@@ -4,14 +4,14 @@ using Brokly.Contracts.Shared;
 
 namespace Brokly.Contracts.Pipeline;
 
-public delegate Task<TResponse> PipelineDelegate<TResponse>(CancellationToken cancellationToken = default);
+public delegate Task<TResult> PipelineDelegate<TResult>(CancellationToken cancellationToken = default);
 
 public delegate Task PipelineDelegate(CancellationToken cancellationToken = default);
 
-public interface IRequestPipeline<in TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+public interface IRequestPipeline<in TRequest, TResult>
+    where TRequest : IRequest<TResult>
 {
-    Task<TResponse> ExecuteAsync(TRequest request, PipelineDelegate<TResponse> complete, CancellationToken cancellationToken = default);
+    Task<TResult> ExecuteAsync(TRequest request, PipelineDelegate<TResult> complete, CancellationToken cancellationToken = default);
 }
 
 public interface IRequestPipeline<in TRequest>

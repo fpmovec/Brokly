@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Brokly.Application.EventsHandling;
+using Brokly.Application.Pipeline;
 using Brokly.Application.RequestHandling;
 using Brokly.Contracts.EventsHandling;
 using Brokly.Contracts.Pipeline;
@@ -67,7 +68,7 @@ public static class ServiceCollectionExtensions
         
         return pipelines.Aggregate(
             services,
-            (total, current) => total.AddScoped(current.Interface, current.Implementation));
+            (total, current) => total.AddTransient(current.Interface, current.Implementation));
     }
 
     /// <summary>
@@ -95,7 +96,9 @@ public static class ServiceCollectionExtensions
 
         if (opts.UsePipelines)
         {
-            AddBroklyPipelinesFromAssemblies(services, [..opts.AssembliesToRegister]);
+            services.AddSingleton<RequestsPipelines>();
+            
+            //AddBroklyPipelinesFromAssemblies(services, [..opts.AssembliesToRegister]);
         }
         
         return services;

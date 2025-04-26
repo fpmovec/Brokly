@@ -2,14 +2,16 @@
 
 namespace Brokly.Contracts.Pipeline;
 
-public interface IRequestPipelineWrapper<in TRequest, TResponse>
-where TRequest : IRequest<TResponse>
+public interface IRequestPipelineWrapper;
+public interface IRequestPipelineWrapper<in TRequest, TResult>: IRequestPipelineWrapper
+where TRequest : IRequest<TResult>
 {
-    Task<TResponse> HandlePipelineAsync(TRequest request, IServiceProvider serviceProvider, CancellationToken cancellationToken);
+    Task<TResult> HandlePipelineAsync(TRequest request, IServiceProvider serviceProvider, CancellationToken cancellationToken);
 }
 
-public interface IRequestPipelineWrapper<in TRequest>
+public interface IRequestPipelineWrapper<in TRequest>: IRequestPipelineWrapper
     where TRequest : IRequest
 {
     Task HandlePipelineAsync(TRequest request, IServiceProvider serviceProvider, CancellationToken cancellationToken);
 }
+

@@ -1,4 +1,6 @@
-﻿using Brokly.Contracts.RequestsHandling;
+﻿using Brokly.Application.Pipeline;
+using Brokly.Contracts.Pipeline;
+using Brokly.Contracts.RequestsHandling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -9,18 +11,29 @@ namespace Brokly.Application.RequestHandling;
 /// </summary>
 public class RequestSender(
     ILogger<RequestSender> logger,
-    IServiceProvider serviceProvider) : IRequestSender
+    IServiceProvider serviceProvider,
+    RequestsPipelines pipelines) : IRequestSender
 {
-    public async Task<TResult> Send<TRequest, TResult>(TRequest request, CancellationToken cancellationToken)
+    public Task<TResult> Send<TRequest, TResult>(TRequest request, CancellationToken cancellationToken)
         where TRequest : IRequest<TResult>
     {
         try
         {
-            var handler = serviceProvider.GetRequiredService<IRequestHandler<TRequest, TResult>>();
+            var requestPipeline = (RequestPipelineWrapper<TRequest, TResult>)pipelines.GetOrAddPipeline(
+                request,
+                requestType =>
+                {
+                    var pipelineWrapperType = typeof(RequestPipelineWrapper<,>).MakeGenericType(requestType, typeof(TResult));
 
-            var handleResult = await handler.HandleAsync(request, cancellationToken);
+                    if (Activator.CreateInstance(pipelineWrapperType) is not IRequestPipelineWrapper wrapper)
+                    {
+                        throw new InvalidOperationException($"Unable to create instance of {pipelineWrapperType}");
+                    }
+                    
+                    return wrapper;
+                });
 
-            return handleResult;
+            return  requestPipeline.HandlePipelineAsync(request, serviceProvider, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -35,9 +48,21 @@ public class RequestSender(
     {
         try
         {
-            var handler = serviceProvider.GetRequiredService<IRequestHandler<TRequest>>();
+            var pipeline = (RequestPipelineWrapper<TRequest>)pipelines.GetOrAddPipeline(
+                request,
+                requestType =>
+                {
+                    var pipelineWrapperType = typeof(RequestPipelineWrapper<>).MakeGenericType(requestType);
 
-            await handler.HandleAsync(request, cancellationToken);
+                    if (Activator.CreateInstance(pipelineWrapperType) is not IRequestPipelineWrapper wrapper)
+                    {
+                        throw new InvalidOperationException($"Unable to create instance of {pipelineWrapperType}");
+                    }
+
+                    return wrapper;
+                });
+            
+            await pipeline.HandlePipelineAsync(request, serviceProvider, cancellationToken);
         }
         catch (Exception ex)
         {
