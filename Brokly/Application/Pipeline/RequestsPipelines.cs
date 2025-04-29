@@ -4,7 +4,7 @@ using Brokly.Contracts.RequestsHandling;
 
 namespace Brokly.Application.Pipeline;
 
-public class RequestsPipelines
+internal class RequestsPipelines
 {
     private readonly ConcurrentDictionary<Type, IRequestPipelineWrapper> _requestPipelines = [];
 

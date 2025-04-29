@@ -4,6 +4,7 @@ using Brokly.Application.Pipeline;
 using Brokly.Application.RequestHandling;
 using Brokly.Contracts.EventsHandling;
 using Brokly.Contracts.Pipeline;
+using Brokly.Contracts.Processors;
 using Brokly.Contracts.RequestsHandling;
 using Brokly.Domain;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,7 +28,7 @@ public static class ServiceCollectionExtensions
 
         foreach (var handler in handlersWithResult)
         {
-            services.AddScoped(handler.Interface, handler.Implementation);
+            services.AddTransient(handler.Interface, handler.Implementation);
         }
         
         return services;
@@ -52,25 +53,7 @@ public static class ServiceCollectionExtensions
         
         return services;
     }
-
-    private static IServiceCollection AddBroklyPipelinesFromAssemblies(IServiceCollection services,
-        Assembly[] assemblies)
-    {
-        var pipelines = assemblies
-            .SelectMany(x => x.GetTypes())
-            .Where(x => !x.IsAbstract)
-            .Where(x => !x.IsInterface)
-            .SelectMany(x => x.GetInterfaces()
-                .Where(ii => ii.IsGenericType && (ii.GetGenericTypeDefinition() == typeof(IRequestPipeline<>) ||
-                                                  ii.GetGenericTypeDefinition() == typeof(IRequestPipeline<,>)))
-                .Select(i => new { Interface = i, Implementation = x }))
-            .ToList();
-        
-        return pipelines.Aggregate(
-            services,
-            (total, current) => total.AddTransient(current.Interface, current.Implementation));
-    }
-
+    
     /// <summary>
     /// Allows adding Brokly to the DI container with custom:
     /// </summary>
@@ -97,8 +80,6 @@ public static class ServiceCollectionExtensions
         if (opts.UsePipelines)
         {
             services.AddSingleton<RequestsPipelines>();
-            
-            //AddBroklyPipelinesFromAssemblies(services, [..opts.AssembliesToRegister]);
         }
         
         return services;

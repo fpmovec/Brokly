@@ -14,6 +14,10 @@ public class BroklyOptions
     /// The maximum number of events those can be placed in the queue at the same time
     /// </summary>
     public int MaxQueueSize { get; private set; } = 500;
+    
+    /// <summary>
+    /// Shows whether pipelines are used
+    /// </summary>
     public bool UsePipelines { get; private set; }
     
     /// <summary>

@@ -6,10 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Brokly.Application.RequestHandling;
 
-/// <summary>
-/// Represents the class that contains request handling implementation
-/// </summary>
-public class RequestSender(
+internal class RequestSender(
     ILogger<RequestSender> logger,
     IServiceProvider serviceProvider,
     RequestsPipelines pipelines) : IRequestSender

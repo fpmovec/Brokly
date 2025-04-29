@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using Brokly.Application.Helpers;
-using Brokly.Application.Pipeline.Processors;
+﻿using Brokly.Application.Helpers;
 using Brokly.Contracts.Pipeline;
 using Brokly.Contracts.Processors;
 using Brokly.Contracts.RequestsHandling;
@@ -39,7 +37,7 @@ where TRequest : IRequest<TResult>
     }
 }
 
-public class RequestPipelineWrapper<TRequest> : IRequestPipelineWrapper<TRequest>
+internal class RequestPipelineWrapper<TRequest> : IRequestPipelineWrapper<TRequest>
     where TRequest : IRequest
 {
     public Task HandlePipelineAsync(TRequest request, IServiceProvider serviceProvider, CancellationToken cancellationToken)
