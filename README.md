@@ -13,8 +13,9 @@
 ## Features
 
 - **Request/Response** via `IRequest<T>` / `IRequestHandler<TRequest, TResult>` and `IRequestSender`  
-- **Event Handling** via `IEvent` / `IEventHandler<TEvent>` and `IEventBus` with in‑memory, bounded, channel‑based queue  
-- **Auto‑registration** of handlers in your DI container using `services.AddBrokly()` or `services.AddBrokly(opts => { … })`
+- **Event Handling** via `IEvent` / `IEventHandler<TEvent>` and `IEventBus` with in‑memory, bounded, channel‑based queue
+- **Request Pipeline**: Global middleware via `IRequestPipeline<TRequest, TResult>` / `IRequestPipeline<TRequest>`
+- **Processors**: Handler-specific middleware via `IProcessor<TRequest, TResult>` / `IProcessor<TRequest>`  
 - **Customizable** queue size, concurrency (consumer count), and event‑handling toggle via `BroklyOptions`
 
 ## Installation
@@ -22,7 +23,7 @@
 Install Brokly from NuGet:
 
 ```bash
-dotnet add package Brokly --version 1.0.1
+dotnet add package Brokly --version <version_number>
 ```
 
 This will automatically pull in the `Brokly.Contracts` package.
@@ -38,7 +39,7 @@ using Brokly.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Default registration (scans calling assembly, no events handling)
+// Default registration (scans calling assembly, no events/pipelines/processors handling)
 builder.Services.AddBrokly();
 
 // OR with customization:
@@ -47,6 +48,7 @@ builder.Services.AddBrokly(options =>
     options
         .AddHandlersFromAssembly(typeof(Program).Assembly)
         .UseEventHandling(true)
+        .UseRequestPipelines() 
         .SetMaxQueueSize(1000)
         .AddConsumers(3);
 });
@@ -128,22 +130,197 @@ public class UserService
     }
 }
 ```
+## Request Pipeline
+
+Brokly’s request pipelines let you apply global middleware to **all** requests, with or without return values.
+
+### Pipeline with Result
+
+Implement `IRequestPipeline<TRequest, TResult>`:
+
+```csharp
+using Brokly.Contracts.Pipeline;
+using Brokly.Contracts.RequestsHandling;
+
+public class LoggingPipeline<TRequest, TResult> : IRequestPipeline<TRequest, TResult>
+    where TRequest : IRequest<TResult>
+{
+    public async Task<TResult> ExecuteAsync(
+        TRequest request,
+        PipelineDelegate<TResult> complete,
+        CancellationToken ct)
+    {
+        Console.WriteLine($"[Pipeline] Handling {typeof(TRequest).Name}");
+        var result = await complete(ct);
+        Console.WriteLine($"[Pipeline] Handled {typeof(TRequest).Name}");
+        return result;
+    }
+}
+```
+
+### Pipeline without Result
+
+Implement `IRequestPipeline<TRequest>`:
+
+```csharp
+using Brokly.Contracts.Pipeline;
+using Brokly.Contracts.RequestsHandling;
+
+public class AuditPipeline<TRequest> : IRequestPipeline<TRequest>
+    where TRequest : IRequest
+{
+    public async Task ExecuteAsync(
+        TRequest request,
+        PipelineDelegate complete,
+        CancellationToken ct)
+    {
+        Console.WriteLine($"[Pipeline] Auditing {typeof(TRequest).Name}");
+        await complete(ct);
+        Console.WriteLine($"[Pipeline] Audit complete for {typeof(TRequest).Name}");
+    }
+}
+```
+
+### Register Pipelines
+
+Register in DI:
+
+```csharp
+builder.Services.AddTransient(
+    typeof(IRequestPipeline<,>),
+    typeof(LoggingPipeline<,>));
+
+builder.Services.Transient(
+    typeof(IRequestPipeline<>),
+    typeof(AuditPipeline<>));
+```
+
+### Execution Flow
+
+1. All registered pipelines execute **before** the handler (in registration order)
+2. The handler’s `HandleAsync` runs
+3. Pipelines execute **after** the handler (in reverse order)
+
+
+## Processors
+
+Processors provide **per-handler** middleware via attributes, for commands and queries (with or without result).
+
+### Processor without Result
+
+Inherit from `ProcessorBase<TRequest>`:
+
+```csharp
+using Brokly.Application.Pipeline.Processors;
+using Brokly.Contracts.RequestsHandling;
+
+public class ValidationProcessor<TRequest> : ProcessorBase<TRequest>
+    where TRequest : IRequest
+{
+    protected override Task PreProcess(TRequest request, CancellationToken ct)
+    {
+        Console.WriteLine($"[Processor] Validating {typeof(TRequest).Name}");
+        // throw if invalid
+        return Task.CompletedTask;
+    }
+
+    protected override Task PostProcess(CancellationToken ct)
+    {
+        Console.WriteLine($"[Processor] Validation complete");
+        return Task.CompletedTask;
+    }
+}
+```
+
+### Processor with Result
+
+Inherit from `ProcessorBase<TRequest, TResult>`:
+
+```csharp
+using Brokly.Application.Pipeline.Processors;
+using Brokly.Contracts.RequestsHandling;
+
+public class MetricsProcessor<TRequest, TResult> : ProcessorBase<TRequest, TResult>
+    where TRequest : IRequest<TResult>
+{
+    protected override Task PreProcess(TRequest request, CancellationToken ct)
+    {
+        Console.WriteLine($"[Processor] Starting metrics for {typeof(TRequest).Name}");
+        return Task.CompletedTask;
+    }
+
+    protected override Task PostProcess(TResult response, CancellationToken ct)
+    {
+        Console.WriteLine($"[Processor] Metrics recorded for {typeof(TRequest).Name}");
+        return Task.CompletedTask;
+    }
+}
+```
+
+### Apply to Handlers
+
+Decorate handlers with `[UseProcessor]` (multiple supported):
+
+```csharp
+using Brokly.Application.Pipeline.Processors;
+
+[UseProcessor(typeof(MetricsProcessor<CreateOrderCommand, OrderResult>))]
+public class CreateOrderHandler : IRequestHandler<CreateOrderCommand, OrderResult>
+{
+    public Task<OrderResult> HandleAsync(CreateOrderCommand request, CancellationToken ct)
+    {
+        // handle order creation
+    }
+}
+```
+OR
+```csharp
+using Brokly.Application.Pipeline.Processors;
+
+[UseProcessor(typeof(ValidationProcessor<CreateOrderCommand>))]
+public class CreateOrderHandler : IRequestHandler<CreateOrderCommand>
+{
+    public Task HandleAsync(CreateOrderCommand request, CancellationToken ct)
+    {
+        // handle order creation
+    }
+}
+```
+
+### Register Processors
+
+Register explicitly or bulk-scan:
+
+```csharp
+builder.Services.AddTransient<
+    IProcessor<CreateOrderCommand>,
+    ValidationProcessor<CreateOrderCommand>>();
+
+builder.Services.AddTransient<
+    IProcessor<CreateOrderCommand, OrderResult>,
+    MetricsProcessor<CreateOrderCommand, OrderResult>>();
+```
+
+### Execution Flow per Handler
+
+1. `PreProcess` on each processor (in attribute/declaration order)
+2. Handler’s `HandleAsync`
+3. `PostProcess` on each processor (in reverse order)
+
 
 ## Configuration Options
 
 Configure `BroklyOptions` in the `AddBrokly` lambda:
 
 - `AddHandlersFromAssembly(Assembly)` / `AddHandlersFromAssemblies(Assembly[])`  
-- `UseEventHandling(bool)` – enable or disable event bus  
+- `UseEventHandling(bool)` – enable or disable event bus
+- `UseRequestPipelines(bool)` – toggle request pipelines
 - `SetMaxQueueSize(int)` – maximum in‑flight events in the channel queue  
-- `AddConsumers(int)` – number of parallel event‑processing workers  
+- `AddConsumers(int)` – number of parallel event‑processing workers
+  If `consumers count is 1`, FIFO approach for events handling is guaranteed, else it's not. The more consumers there are, the faster events are handled
 
 See the full `BroklyOptions` API in the [Domain project](https://github.com/fpmovec/Brokly/tree/main/Brokly/Domain).
 
-## In the plans:
-- Behaviour pipeline
-- Built-in requests validation
-- Create more than one queue dynamically to segregate events those need to be handled
 
 ## Contributing
 
