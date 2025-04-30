@@ -1,7 +1,10 @@
 ﻿using System.Reflection;
 using Brokly.Application.EventsHandling;
+using Brokly.Application.Pipeline;
 using Brokly.Application.RequestHandling;
 using Brokly.Contracts.EventsHandling;
+using Brokly.Contracts.Pipeline;
+using Brokly.Contracts.Processors;
 using Brokly.Contracts.RequestsHandling;
 using Brokly.Domain;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +28,7 @@ public static class ServiceCollectionExtensions
 
         foreach (var handler in handlersWithResult)
         {
-            services.AddScoped(handler.Interface, handler.Implementation);
+            services.AddTransient(handler.Interface, handler.Implementation);
         }
         
         return services;
@@ -50,7 +53,7 @@ public static class ServiceCollectionExtensions
         
         return services;
     }
-
+    
     /// <summary>
     /// Allows adding Brokly to the DI container with custom:
     /// </summary>
@@ -72,6 +75,11 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IEventBus, EventBus>();
             
             AddBroklyEventHandlersFromAssemblies(services, [..opts.AssembliesToRegister]);
+        }
+
+        if (opts.UsePipelines)
+        {
+            services.AddSingleton<RequestsPipelines>();
         }
         
         return services;

@@ -6,10 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Brokly.Application.EventsHandling;
 
-/// <summary>
-/// Represents the class that contains events queue implementation
-/// </summary>
-public class EventBus : IEventBus, IDisposable
+internal class EventBus : IEventBus, IDisposable
 {
     public EventBus(
         IServiceScopeFactory scopeFactory,

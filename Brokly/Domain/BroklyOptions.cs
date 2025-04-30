@@ -16,6 +16,11 @@ public class BroklyOptions
     public int MaxQueueSize { get; private set; } = 500;
     
     /// <summary>
+    /// Shows whether pipelines are used
+    /// </summary>
+    public bool UsePipelines { get; private set; }
+    
+    /// <summary>
     /// Number thar shows how many 'consumers' handle events
     /// </summary>
     /// /// <remarks>
@@ -95,6 +100,13 @@ public class BroklyOptions
     {
         ConsumersCount = count;
         
+        return this;
+    }
+
+    public BroklyOptions UseRequestPipelines(bool useRequestPipelines = true)
+    {
+        UsePipelines = useRequestPipelines;
+
         return this;
     }
 }
