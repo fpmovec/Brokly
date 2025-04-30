@@ -1,5 +1,6 @@
 ﻿namespace Brokly.Contracts.RequestsHandling;
 
+public interface IRequestHandler;
 /// <summary>
 /// Defines a handler for a Brokly request with a response of type <typeparamref name="TResult"/>.
 /// </summary>
@@ -9,7 +10,7 @@
 /// Implement this interface to create request handlers for queries or commands that return results.
 /// The handler contains the business logic to process the request and generate a response.
 /// </remarks>
-public interface IRequestHandler<in TRequest, TResult>
+public interface IRequestHandler<in TRequest, TResult> : IRequestHandler
     where TRequest: IRequest<TResult>
 {
     /// <summary>
@@ -29,7 +30,7 @@ public interface IRequestHandler<in TRequest, TResult>
 /// Implement this interface to create request handlers for commands that don't return results.
 /// The handler contains the business logic to process the request.
 /// </remarks>
-public interface IRequestHandler<in TRequest>
+public interface IRequestHandler<in TRequest> : IRequestHandler
     where TRequest: IRequest
 {
     

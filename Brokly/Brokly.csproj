@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <PackageVersion>1.0.1</PackageVersion>
+        <PackageVersion>1.1.0</PackageVersion>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -18,7 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Brokly.Contracts\Brokly.Contracts.csproj" />
-      <PackageReference Include="Brokly.Contracts" Version="1.0.1" />
+      <PackageReference Include="Brokly.Contracts" Version="1.1.0" />
     </ItemGroup>
 
     <ItemGroup>
