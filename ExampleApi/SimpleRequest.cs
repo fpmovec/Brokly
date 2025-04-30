@@ -6,16 +6,31 @@ using Brokly.Contracts.RequestsHandling;
 
 namespace ExampleApi;
 
-public class SimpleRequest : IRequest<string>
+public class WithResult
 {
-    public string Name { get; set; }
+    public class SimpleRequest : IRequest<string>
+    {
+        public string Name { get; set; }
+    }
+
 }
 
-[UseProcessor(typeof(SimpleLoggingProcessor<SimpleRequest, string>))]
-[UseProcessor(typeof(TestProcessor<SimpleRequest, string>))]
-public class SimpleHandler(ILogger<SimpleHandler> logger) : IRequestHandler<SimpleRequest, string>
+public class WithoutResult
 {
-    public Task<string> HandleAsync(SimpleRequest request, CancellationToken cancellationToken)
+    public class SimpleRequest : IRequest
+    {
+        public string Name { get; set; }
+    }
+
+}
+
+
+
+[UseProcessor(typeof(SimpleLoggingProcessor<WithResult.SimpleRequest, string>))]
+[UseProcessor(typeof(TestProcessor<WithResult.SimpleRequest, string>))]
+public class SimpleHandler(ILogger<SimpleHandler> logger) : IRequestHandler<WithResult.SimpleRequest, string>
+{
+    public Task<string> HandleAsync(WithResult.SimpleRequest request, CancellationToken cancellationToken)
     {
         logger.LogCritical($"Simple request: {request.Name}");
         return Task.FromResult($"{request.Name} is handled");
@@ -119,9 +134,9 @@ public class SecondProcessorWithoutResult<TRequest>(ILogger<SecondProcessorWitho
 }
 
 public class ProcessorWithoutResult(ILogger<ProcessorWithoutResult> logger)
-    : ProcessorBase<SimpleRequest>
+    : ProcessorBase<WithoutResult.SimpleRequest>
 {
-    protected override Task PreProcess(SimpleRequest request, CancellationToken cancellationToken)
+    protected override Task PreProcess(WithoutResult.SimpleRequest request, CancellationToken cancellationToken)
     {
         logger.LogWarning("Second PRE process");
         
@@ -136,11 +151,11 @@ public class ProcessorWithoutResult(ILogger<ProcessorWithoutResult> logger)
     }
 }
 
-//[UseProcessor(typeof(SecondProcessorWithoutResult<SimpleRequest>))]
+[UseProcessor(typeof(SecondProcessorWithoutResult<WithoutResult.SimpleRequest>))]
 [UseProcessor(typeof(ProcessorWithoutResult))]
-public class SecondHandler(ILogger<SecondHandler> logger) : IRequestHandler<SimpleRequest>
+public class SecondHandler(ILogger<SecondHandler> logger) : IRequestHandler<WithoutResult.SimpleRequest>
 {
-    public Task HandleAsync(SimpleRequest request, CancellationToken cancellationToken)
+    public Task HandleAsync(WithoutResult.SimpleRequest request, CancellationToken cancellationToken)
     {
         logger.LogCritical($"Simple request: {request.Name}");
         return Task.FromResult($"{request.Name} is handled");
